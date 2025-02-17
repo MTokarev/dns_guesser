@@ -6,10 +6,9 @@ def read_long_description():
     with open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf-8') as f:
         return f.read()
 
-
 setup(
     name='dns-guesser',
-    version='0.1.1',
+    version='0.1.2',
     packages=find_packages(),
     install_requires=[
         'dnspython==2.7.0'

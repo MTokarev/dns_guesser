@@ -132,26 +132,34 @@ def write_results_to_file(resolved: DefaultDict[str, set[str]], file_path: str, 
 
             if file_flat:
                 logger.info("Writing results in flat format. Each line is a resolved IP. To have the domain name, set the 'flat' option to 'true'.")
+                distinct_ips = set()
+                for domain in resolved.keys():
+                    distinct_ips.update(resolved[domain])
+                
+                for ip in distinct_ips:
+                    if cancellation_event.is_set():
+                        logger.debug("Cancellation requested. Exiting...")
+                        sys.exit(0)
+                    
+                    f.write(f"{ip}\n")
+            else:
+                # If we made to this point, it means that the user wants the domain format
+                logger.info("Writing results by adding domain for the each IP as a comment. To have flat format with one IP per remove the 'flat' flag.")
+                
+                sorted_by_duplicates: DefaultDict[str, set[str]] = defaultdict(set)
+                
                 for domain in resolved.keys():
                     for ip in resolved[domain]:
-                        f.write(f"{ip}\n")
-                return
-            
-            
-            # If we made to this point, it means that the user wants the domain format
-            logger.info("Writing results by adding domain for the each IP as a comment. To have flat format with one IP per remove the 'flat' flag.")
-            
-            sorted_by_duplicates: DefaultDict[str, set[str]] = defaultdict(set)
-            
-            for domain in resolved.keys():
-                for ip in resolved[domain]:
-                    if ip in sorted_by_duplicates:
-                        sorted_by_duplicates[ip].add(domain)
-                    else:
-                        sorted_by_duplicates[ip] = {domain}
-            
-            for ip in sorted_by_duplicates.keys():
-                f.write(f"{ip} # {', '.join(sorted_by_duplicates[ip])}\n")
+                        if ip in sorted_by_duplicates:
+                            sorted_by_duplicates[ip].add(domain)
+                        else:
+                            sorted_by_duplicates[ip] = {domain}
+                
+                for ip in sorted_by_duplicates.keys():
+                    if cancellation_event.is_set():
+                            logger.debug("Cancellation requested. Exiting...")
+                            sys.exit(0)
+                    f.write(f"{ip} # {', '.join(sorted_by_duplicates[ip])}\n")
 
     except IOError as e:
         logger.error(f"Error writing to file {file_path}: {e}")
