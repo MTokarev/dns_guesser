@@ -69,7 +69,7 @@ def load_config(cancellation_event: threading.Event, parsed_args: argparse.Names
         logging.debug(f"Debug mode is enabled. Configuration: {config}")
 
     if config.subdomain_word_list_file_path is None or config.subdomain_word_list_file_path == "":
-        logger.info(f"'subdomain_word_list_file_path' is not set in the configuration '{config_filename}' or provide via argument. Using default list with the most 5000 used domains.")
+        logger.info(f"'subdomain_word_list_file_path' is not set in the configuration '{config_filename}' or provided via argument. Using default list with the most 5000 used domains.")
         subdomains: set[str] = THE_MOST_USED_DOMAINS
     else:
         try:
@@ -78,7 +78,6 @@ def load_config(cancellation_event: threading.Event, parsed_args: argparse.Names
         except IOError as e:
             raise ValueError(f"Error reading subdomain word list file: {e}")
 
-    subdomains.update(config.domains_to_resolve)
     config.subdomain_word_list = get_valid_subdomains(subdomains);
     config.dns.servers = get_validated_dns_servers(config.dns.health_check_domain, config.dns.servers, cancellation_event)
 

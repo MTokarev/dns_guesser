@@ -30,6 +30,8 @@ logger = logging.getLogger(__name__)
 def main():
     start_time = time.perf_counter()
 
+    logger.info("Press Ctrl+C to cancel the execution.")
+    
     # Register signal handlers for graceful shutdown (Ctrl+C or termination)
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
@@ -49,33 +51,30 @@ def main():
     logger.info(f"Elapsed time: {elapsed_time:.2f} seconds")
 
 
-def resolve_subdomain(server: str, domain: str, subdomain: str, record_type: dns.rdatatype = dns.rdatatype.A) -> tuple[str, str, List[str] | None]:
+def resolve_domain(server: str, domain: str, record_type: dns.rdatatype = dns.rdatatype.A) -> tuple[str, str, List[str] | None]:
     """
-    Tries to resolve a subdomain using the specified DNS server.
-    
-    Returns:
-        (subdomain, resolved IP) if successful, otherwise (subdomain, None).
-    """
+    Resolves a domain using the specified DNS server and record type.
 
-    # Short circuit if cancellation is requested
-    domain_to_resolve = f"{subdomain}.{domain}"
+    Returns:
+        A tuple containing the domain, server, and a list of resolved IP addresses or None if not resolved.
+    """
     if cancellation_event.is_set():
-        return domain, server, domain_to_resolve, None
-    
+        return domain, server, None
+
     try:
         resolver = dns.resolver.Resolver()
         resolver.nameservers = [server]
-        result = resolver.resolve(domain_to_resolve)
+        result = resolver.resolve(domain)
         addresses = [rdata.address for rdata in result]
         
-        return domain, server, domain_to_resolve, addresses
+        return domain, server, addresses
     except dns.resolver.NoAnswer:
         if record_type != dns.rdatatype.CNAME:
-            return resolve_subdomain(server, domain, subdomain, dns.rdatatype.CNAME)
+            return resolve_domain(server, domain, dns.rdatatype.CNAME)
         else:
-            return domain, server, domain_to_resolve, None
+            return domain, server,  None
     except Exception:
-        return domain, server, domain_to_resolve, None  # Return None for unresolved subdomains
+        return domain, server, None  # Return None for unresolved subdomains
 
 def resolve_in_parallel(config: AppConfig) -> DefaultDict[str, set[str]]:
     """
@@ -94,12 +93,19 @@ def resolve_in_parallel(config: AppConfig) -> DefaultDict[str, set[str]]:
 
         # Submit tasks
         for domain in config.domains_to_resolve:
+            
+            # Add domain itself
+            server = config.dns.servers[dns_load_balancing_index] 
+            future = executor.submit(resolve_domain, server, domain)
+            future_to_subdomain[future] = domain
+            dns_load_balancing_index = (dns_load_balancing_index + 1) % len(config.dns.servers)
+
             for subdomain in config.subdomain_word_list:
                 if cancellation_event.is_set():
                     logger.debug("Cancellation requested. Exiting...")
                     sys.exit(0)
                 server = config.dns.servers[dns_load_balancing_index] 
-                future = executor.submit(resolve_subdomain, server, domain, subdomain)
+                future = executor.submit(resolve_domain, server, f"{subdomain}.{domain}")
                 future_to_subdomain[future] = subdomain
 
                 # Load balancing across DNS servers
@@ -110,12 +116,12 @@ def resolve_in_parallel(config: AppConfig) -> DefaultDict[str, set[str]]:
             if cancellation_event.is_set():
                 logger.debug("Cancellation requested. Exiting...")
                 sys.exit(0)
-            domain, server, domain_to_resolve, ip_addresses = future.result()
+            domain, server, ip_addresses = future.result()
             if ip_addresses is not None and len(ip_addresses) > 0:
                 resolved[domain].update(ip_addresses)
-                logger.info(f"DNS server '{server}' resolved '{domain_to_resolve}' to '{ip_addresses}'.")
+                logger.info(f"DNS server '{server}' resolved '{domain}' to '{', '.join(ip_addresses)}'.")
 
-    logger.info(f"Resolved {len(resolved)} subdomain{'s' if len(resolved) > 1 else ''}.")
+    logger.info("All records have been resolved.")
 
     return resolved  
 
@@ -126,22 +132,27 @@ def write_results_to_file(resolved: DefaultDict[str, set[str]], file_path: str, 
 
             if file_flat:
                 logger.info("Writing results in flat format. Each line is a resolved IP. To have the domain name, set the 'flat' option to 'true'.")
-            else:
-                logger.info("Writing results in domain format. Each domain has its own section. To have flat format with one IP per line only, set the 'flat' option to 'false'.")
-
-            splitter = f"# {'-' * 30}\n"
+                for domain in resolved.keys():
+                    for ip in resolved[domain]:
+                        f.write(f"{ip}\n")
+                return
+            
+            
+            # If we made to this point, it means that the user wants the domain format
+            logger.info("Writing results by adding domain for the each IP as a comment. To have flat format with one IP per remove the 'flat' flag.")
+            
+            sorted_by_duplicates: DefaultDict[str, set[str]] = defaultdict(set)
+            
             for domain in resolved.keys():
-                if not file_flat:
-                    f.write(splitter)
-                    f.write(f"# Beginning of {domain}:\n")
-                    f.write(splitter)
                 for ip in resolved[domain]:
-                    f.write(f"{ip}\n")
-                
-                if not file_flat:
-                    f.write(splitter)
-                    f.write(f"# End Of {domain}\n")
-                    f.write(splitter)
+                    if ip in sorted_by_duplicates:
+                        sorted_by_duplicates[ip].add(domain)
+                    else:
+                        sorted_by_duplicates[ip] = {domain}
+            
+            for ip in sorted_by_duplicates.keys():
+                f.write(f"{ip} # {', '.join(sorted_by_duplicates[ip])}\n")
+
     except IOError as e:
         logger.error(f"Error writing to file {file_path}: {e}")
         return
