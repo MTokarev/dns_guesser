@@ -78,6 +78,7 @@ def load_config(cancellation_event: threading.Event, parsed_args: argparse.Names
         except IOError as e:
             raise ValueError(f"Error reading subdomain word list file: {e}")
 
+    subdomains.update(config.domains_to_resolve)
     config.subdomain_word_list = get_valid_subdomains(subdomains);
     config.dns.servers = get_validated_dns_servers(config.dns.health_check_domain, config.dns.servers, cancellation_event)
 
