@@ -8,15 +8,15 @@ def read_long_description():
 
 
 setup(
-    name='dns_guesser',
-    version='0.3',
+    name='dns-guesser',
+    version='0.4',
     packages=find_packages(),
     install_requires=[
         'dnspython==2.7.0'
     ],
     entry_points={
         'console_scripts': [
-            'dns_guesser = app.src.main:main',
+            'dns-guesser = app.src.main:main',
         ],
     },
     test_suite='tests',

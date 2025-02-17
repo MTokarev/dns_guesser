@@ -34,7 +34,7 @@ For two domains and 5000 subdomains, it usually takes 30-40 seconds to complete 
 
 Here is the app help:
 ```
-usage: dns_guesser [-h] -d 'google.com,linkedin.com' [-s '8.8.8.8,8.8.4.4'] [-sw subdomain_list.txt] [-hc github.com] [-o dns_resolution_result.txt] [-fr]
+usage: dns-guesser [-h] -d 'google.com,linkedin.com' [-s '8.8.8.8,8.8.4.4'] [-sw subdomain_list.txt] [-hc github.com] [-o dns_resolution_result.txt] [-fr]
                    [-t 64] [-db]
 
 Subdomain Resolver
@@ -68,8 +68,8 @@ options:
   Outputs debug information.
 
 Examples:
-dns_guesser --domains-to-resolve "google.com, linkedin.com"
-dns_guesser --domains-to-resolve "linkedin.com" --dns-servers "1.1.1.1" --subdomain-word-list-file-path ./subdomains.txt --health-check-domain github.com --output-file-path ./result.txt --flat-result False -t 100 --debug
+dns-guesser --domains-to-resolve "google.com, linkedin.com"
+dns-guesser --domains-to-resolve "linkedin.com" --dns-servers "1.1.1.1" --subdomain-word-list-file-path ./subdomains.txt --health-check-domain github.com --output-file-path ./result.txt --flat-result False -t 100 --debug
 ```
 
 Alternatively, you can put the configuration in a config file.
