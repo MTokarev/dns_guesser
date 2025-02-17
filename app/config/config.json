@@ -1,5 +1,4 @@
 {
-	"subdomain_word_list_file_path": "/Users/mtokarev/Documents/git/dns_guesser/app/assets/subdomain_word_list.txt",
   "flat_result": true,
   "debug": false,
   "output_file_path": "./result.txt",

@@ -36,10 +36,10 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
     
-    if len(sys.argv) == 1:
-        config = load_config(cancellation_event, config_filename="./config.json")
+    parsed_args = parse_args()
+    if parsed_args.config_file:
+        config = load_config(cancellation_event, config_filename=parsed_args.config_file)
     else:
-        parsed_args = parse_args()
         config = load_config(cancellation_event, parsed_args=parsed_args)
 
     result = resolve_in_parallel(config)
@@ -171,8 +171,10 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Subdomain Resolver")
 
     # Adding required command-line arguments
-    parser.add_argument("-d", "--domains-to-resolve", metavar="'google.com,linkedin.com'", required=True, type=str, help="Comma-separated domains to resolve.")
-    
+    # Adding mutually exclusive group
+    group = parser.add_mutually_exclusive_group(required=True)  # One argument in the group must be provided
+    group.add_argument("-c", "--config-file", metavar="config.json", type=str, help="Path to the configuration file.")
+    group.add_argument("-d", "--domains-to-resolve", metavar="'google.com,linkedin.com'", type=str, help="Comma-separated domains to resolve.")    
     # Optional arguments
     parser.add_argument("-s", "--dns-servers", metavar="'8.8.8.8,8.8.4.4'", default="8.8.8.8,8.8.4.4", type=str, help="Comma-separated list of DNS servers to use. Default is '8.8.8.8,8.8.4.4'.")
     parser.add_argument("-sw", "--subdomain-word-list-file-path", metavar="subdomain_list.txt", default=None, type=str, help="Path to the subdomain word list file. If not provided, a default list with 5000 of the most used subdomains will be used.")

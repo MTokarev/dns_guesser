@@ -26,7 +26,7 @@ class DNSConfig:
         return f"DNSConfig(resolution_timeout_milliseconds={self.resolution_timeout_milliseconds}, retries={self.retries}, servers={self.servers}, health_check_domain={self.health_check_domain})"
 
 class AppConfig:
-    def __init__(self, subdomain_word_list_file_path: str, domains_to_resolve: set[str], max_thread_count: int, dns: DNSConfig, output_file_path: str = "./result.txt", flat_result: bool = False, debug: bool = False, subdomain_word_list: set[str] = None):
+    def __init__(self, domains_to_resolve: set[str], max_thread_count: int, dns: DNSConfig, output_file_path: str = "./result.txt", flat_result: bool = False, debug: bool = False, subdomain_word_list: set[str] = None, subdomain_word_list_file_path: str = None):
         self.subdomain_word_list_file_path = subdomain_word_list_file_path
         self.domains_to_resolve = set(domains_to_resolve)
         self.subdomain_word_list = None if subdomain_word_list is None else set(subdomain_word_list)
@@ -39,7 +39,7 @@ class AppConfig:
     def __repr__(self):
         return f"AppConfig(subdomain_word_list_file_path={self.subdomain_word_list_file_path}, subdomain_word_list={self.subdomain_word_list} max_thread_count={self.max_thread_count}, dns={self.dns})"
 
-def load_config(cancellation_event: threading.Event, parsed_args: argparse.Namespace | None = None, config_filename: str='config.json') -> AppConfig:
+def load_config(cancellation_event: threading.Event, parsed_args: argparse.Namespace | None = None, config_filename: str | None = None) -> AppConfig:
     """Loads the configuration from the specified JSON file or passed arguments."""
     
     if parsed_args is not None:
@@ -52,17 +52,17 @@ def load_config(cancellation_event: threading.Event, parsed_args: argparse.Names
             flat_result=parsed_args.flat_result
         )        
     else:
-        config_path = os.path.join(os.path.dirname(__file__), config_filename)
+        config_path = os.path.join(os.getcwd(), config_filename)
         if not os.path.exists(config_path):
-            raise FileNotFoundError(f"Configuration file '{config_filename}' not found.")
+            logger.error("Configuration file '{config_path}' not found.")
+            sys.exit(1)
         try:
             with open(config_path, 'r') as f:
                 config_json = json.load(f)
                 config = AppConfig(**config_json)
-        except FileNotFoundError: 
-            raise FileNotFoundError(f"Configuration file '{config_filename}' not found.")
         except json.JSONDecodeError as e:
-            raise ValueError(f"Error decoding JSON configuration from {config_filename}: {e}")
+            logger.error(f"Error decoding JSON configuration from {config_path}: {e}")
+            sys.exit(1)
 
     if config.debug:
         logger.setLevel(logging.DEBUG)
@@ -76,7 +76,8 @@ def load_config(cancellation_event: threading.Event, parsed_args: argparse.Names
             with open(config.subdomain_word_list_file_path, 'r') as f:
                 subdomains: set[str] = f.readlines()
         except IOError as e:
-            raise ValueError(f"Error reading subdomain word list file: {e}")
+            logger.error(f"Error reading subdomain word list file: {e}")
+            sys.exit(1)
 
     config.subdomain_word_list = get_valid_subdomains(subdomains);
     config.dns.servers = get_validated_dns_servers(config.dns.health_check_domain, config.dns.servers, cancellation_event)
