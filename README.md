@@ -108,3 +108,19 @@ The easiest way is to install it via `pip`:
 ## What is the source for 5000 subdomains
 
 Special thanks 🎸 goes to the https://github.com/danielmiessler/SecLists repo.
+
+## Output file
+
+### Flat
+```txt
+1.1.1.1
+1.1.1.2
+8.8.1.1
+```
+
+### Not flat
+```txt
+8.8.8.8 # ns1.google.com, ns2.google.com
+1.1.1.1 # domain.com, www.example.com
+1.2.1.2 # something.example.com
+```

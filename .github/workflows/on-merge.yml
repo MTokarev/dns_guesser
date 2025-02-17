@@ -2,8 +2,11 @@ name: Build and Publish Python Package
 
 on:
   push:
+    paths:
+    # Trigger only if changes are in the app/ folder 
+    - 'app/**'
     branches:
-      - main  # Change to your desired branch
+      - main
 
 jobs:
   build:
