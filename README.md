@@ -103,7 +103,7 @@ Make sure that you have at least Python `3.10` version installed.
 
 The easiest way is to install it via `pip`:
 
-`pip install dns_guesser`
+`pip install dns-guesser`
 
 ## What is the source for 5000 subdomains
 
