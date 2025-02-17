@@ -131,7 +131,7 @@ def write_results_to_file(resolved: DefaultDict[str, set[str]], file_path: str, 
         with open(file_path, 'w') as f:
 
             if file_flat:
-                logger.info("Writing results in flat format. Each line is a resolved IP. To have the domain name, set the 'flat' option to 'true'.")
+                logger.info("Writing results in flat format. To have the domain name in the line as a comment please remove the '--fr' flag.")
                 distinct_ips = set()
                 for domain in resolved.keys():
                     distinct_ips.update(resolved[domain])
@@ -144,7 +144,7 @@ def write_results_to_file(resolved: DefaultDict[str, set[str]], file_path: str, 
                     f.write(f"{ip}\n")
             else:
                 # If we made to this point, it means that the user wants the domain format
-                logger.info("Writing results by adding domain for the each IP as a comment. To have flat format with one IP per remove the 'flat' flag.")
+                logger.info("Writing results by adding domain for the each IP as a comment. To have flat format with one IP per line set the '-fr' flag.")
                 
                 sorted_by_duplicates: DefaultDict[str, set[str]] = defaultdict(set)
                 
