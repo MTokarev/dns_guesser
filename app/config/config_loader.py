@@ -26,13 +26,14 @@ class DNSConfig:
         return f"DNSConfig(resolution_timeout_milliseconds={self.resolution_timeout_milliseconds}, retries={self.retries}, servers={self.servers}, health_check_domain={self.health_check_domain})"
 
 class AppConfig:
-    def __init__(self, domains_to_resolve: set[str], max_thread_count: int, dns: DNSConfig, output_file_path: str = "./result.txt", flat_result: bool = False, debug: bool = False, subdomain_word_list: set[str] = None, subdomain_word_list_file_path: str = None):
+    def __init__(self, domains_to_resolve: set[str], max_thread_count: int, dns: DNSConfig, output_file_path: str = "./result.txt", flat_result: bool = False, compact_networks: bool = False, debug: bool = False, subdomain_word_list: set[str] = None, subdomain_word_list_file_path: str = None):
         self.subdomain_word_list_file_path = subdomain_word_list_file_path
         self.domains_to_resolve = set(domains_to_resolve)
         self.subdomain_word_list = None if subdomain_word_list is None else set(subdomain_word_list)
         self.max_thread_count = max_thread_count
         self.output_file_path = output_file_path
         self.flat_result = flat_result
+        self.compact_networks = compact_networks
         self.debug = debug
         self.dns = DNSConfig(**dns)
 
@@ -49,7 +50,8 @@ def load_config(cancellation_event: threading.Event, parsed_args: argparse.Names
             dns={'servers': [server.strip() for server in parsed_args.dns_servers.split(",")], 'health_check_domain': parsed_args.health_check_domain},
             max_thread_count=parsed_args.max_thread_count,
             output_file_path=parsed_args.output_file_path,
-            flat_result=parsed_args.flat_result
+            flat_result=parsed_args.flat_result,
+            compact_networks=parsed_args.compact_networks
         )        
     else:
         config_path = os.path.join(os.getcwd(), config_filename)

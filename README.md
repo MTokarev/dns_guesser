@@ -4,9 +4,14 @@ A simple tool that allows you to resolve subdomains for the given domain list.
 
 ## Why ❓
 
-Firewalls that operate on the TCP Layer 4 couldn't filter sites based on the URLs/Domains. For example, you cannot block `domain.com` or any of its subdomains by name. You need to know their IP addresses.  
-This tool helps to get IP addresses for the given domain list and also tries to guess respective subdomains. It can be put behind a cron job that will regenerate the list and push it to the firewall.
-Can be useful for Linux IpTables and Windows firewall.
+This tool is designed for penetration testers (pentesters) and network administrators who need to resolve IP addresses for given domains and attempt to enumerate subdomains. It helps in identifying the IPs associated with domains and their subdomains, making it a valuable asset for tasks like firewall configuration and network mapping.
+
+### Key Features:
+- **Domain and Subdomain Resolution**: Resolves domain names and attempts to guess subdomains automatically.
+- **IP Address Retrieval**: Retrieves the IP addresses associated with domains and subdomains.
+- **Firewall Application**: Can be used for configuring firewalls like Linux IpTables and Windows Firewall, especially for blocking or filtering sites based on IP addresses instead of domain names.  
+- **Automation-Friendly**: Can be put behind a cron job to regenerate a list of IP addresses and push it to firewalls, ensuring the firewall rules stay updated.
+
 
 ## How 🤔
 
@@ -33,69 +38,52 @@ For two domains and 5000 subdomains, it usually takes 30-40 seconds to complete 
 ## Help 🧑🏼‍💻
 
 Here is the app help:
+### Command-Line Arguments
+
+| Short | Long                      | Type      | Default                          | Description |
+|-------|---------------------------|----------|----------------------------------|-------------|
+| `-c`  | `--config-file`           | `str`    | None                             | Path to the configuration file. |
+| `-d`  | `--domains-to-resolve`    | `str`    | None                             | Comma-separated domains to resolve. |
+| `-fr` | `--flat-result`           | `bool`   | `False`                          | Writes results in flat format (one IP per line). |
+| `-ct` | `--compact-networks`      | `bool`   | `False`                          | Prints results in CIDR notation (grouping networks if possible). |
+| `-s`  | `--dns-servers`           | `str`    | `"8.8.8.8,8.8.4.4"`              | Comma-separated list of DNS servers to use. |
+| `-sw` | `--subdomain-word-list-file-path` | `str` | `None`                 | Path to the subdomain word list file. Uses a default list if not provided. |
+| `-hc` | `--health-check-domain`   | `str`    | `"github.com"`                   | Domain used for DNS server health check. |
+| `-o`  | `--output-file-path`      | `str`    | `"dns_resolution_result.txt"`    | Path to the result file. |
+| `-t`  | `--max-thread-count`      | `int`    | `64`                             | Maximum number of threads to use. |
+| `-db` | `--debug`                 | `bool`   | `False`                          | Enables debug output. |
+
+### Usage Examples
+- **Using a config file**:  
+  ```sh
+  python subdomain_resolver.py -c config.json
+  ```
+  **config.json**
+  ```json
+  {
+    "subdomain_word_list_file_path": "/path/to/the/subdomain_word_list.txt",
+    "flat_result": true,
+    "debug": false,
+    "output_file_path": "./result.txt",
+    "max_thread_count": 100,
+    "domains_to_resolve": [
+      "github.com",
+      "linkedin.com"
+    ],
+    "dns": {
+      "servers": [
+        "8.8.8.8",
+        "8.8.4.4"
+      ],
+      "health_check_domain": "github.com"
+    }
+  }
+  ```
+
+- **CLI**:
+```dns-guesser --domains-to-resolve "google.com, linkedin.com"
+dns-guesser --domains-to-resolve "linkedin.com" --dns-servers "1.1.1.1" --subdomain-word-list-file-path ./subdomains.txt --health-check-domain github.com --output-file-path ./result.txt --flat-result -t 100 --debug
 ```
-usage: dns-guesser [-h] -d 'google.com,linkedin.com' [-s '8.8.8.8,8.8.4.4'] [-sw subdomain_list.txt] [-hc github.com] [-o dns_resolution_result.txt] [-fr]
-                   [-t 64] [-db]
-
-Subdomain Resolver
-
-options:
-  -h, --help            
-  show this help message and exit
-  
-  -d 'google.com,linkedin.com', --domains-to-resolve 'google.com,linkedin.com'
-  Comma-separated domains to resolve.
-  
-  -s '8.8.8.8,8.8.4.4', --dns-servers '8.8.8.8,8.8.4.4'
-  Comma-separated list of DNS servers to use. Default is '8.8.8.8,8.8.4.4'.
-  
-  -sw subdomain_list.txt, --subdomain-word-list-file-path subdomain_list.txt
-  Path to the subdomain word list file. If not provided, a default list with 5000 of the most used subdomains will be used.
-  
-  -hc github.com, --health-check-domain github.com
-  Domain for the DNS servers health check. The DNS server is considered valid if it can resolve the domain. Default is 'github.com'.
-  
-  -o dns_resolution_result.txt, --output-file-path dns_resolution_result.txt
-  Path to the result file. Default is './dns_resolution_result.txt'.
-  
-  -fr, --flat-result
-  Writes results in flat format. Every line contains only an IP address. If not set, each domain will have its own section.
-  
-  -t 64, --max-thread-count 64
-  Maximum number of threads to use. Default is 64.
-  
-  -db, --debug
-  Outputs debug information.
-
-Examples:
-dns-guesser --domains-to-resolve "google.com, linkedin.com"
-dns-guesser --domains-to-resolve "linkedin.com" --dns-servers "1.1.1.1" --subdomain-word-list-file-path ./subdomains.txt --health-check-domain github.com --output-file-path ./result.txt --flat-result False -t 100 --debug
-```
-
-Alternatively, you can put the configuration in a config file.
-The application checks the config.json in the same working directory.
-Example:
-```json
-{
-  "subdomain_word_list_file_path": "/path/to/the/subdomain_word_list.txt",
-  "flat_result": true,
-  "debug": false,
-  "output_file_path": "./result.txt",
-	"max_thread_count": 100,
-  "domains_to_resolve": [
-    "github.com",
-    "linkedin.com"
-  ],
-	"dns": {
-		"servers": [
-			"8.8.8.8",
-			"8.8.4.4"
-		],
-    "health_check_domain": "github.com"
-	}
-}
-```
-
 
 ## How to get it 🚀
 
@@ -123,4 +111,11 @@ Special thanks 🎸 goes to the https://github.com/danielmiessler/SecLists repo.
 8.8.8.8 # ns1.google.com, ns2.google.com
 1.1.1.1 # domain.com, www.example.com
 1.2.1.2 # something.example.com
+```
+
+### Compacted
+```txt
+192.168.1.0/23
+192.168.2.1/32
+175.20.11.0/28
 ```
