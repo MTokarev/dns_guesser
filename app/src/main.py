@@ -183,14 +183,12 @@ def parse_args() -> argparse.Namespace:
     group = parser.add_mutually_exclusive_group(required=True)  # One argument in the group must be provided
     group.add_argument("-c", "--config-file", metavar="config.json", type=str, help="Path to the configuration file.")
     group.add_argument("-d", "--domains-to-resolve", metavar="'google.com,linkedin.com'", type=str, help="Comma-separated domains to resolve.")    
-    
 
     # Optional arguments
     optional_group = parser.add_mutually_exclusive_group(required=False)  # One argument in the group must be provided
     optional_group.add_argument("-fr", "--flat-result", action="store_true", help="Writes results in flat format. Every line contains only an IP address. If not set, each domain will have its own section.")
     optional_group.add_argument("-ct", "--compact-networks", action="store_true", help="The result will be printed in CIDR notation flat format, but with this flag, IP addresses will be grouped by network if possible.")    
     
-        
     parser.add_argument("-s", "--dns-servers", metavar="'8.8.8.8,8.8.4.4'", default="8.8.8.8,8.8.4.4", type=str, help="Comma-separated list of DNS servers to use. Default is '8.8.8.8,8.8.4.4'.")
     parser.add_argument("-sw", "--subdomain-word-list-file-path", metavar="subdomain_list.txt", default=None, type=str, help="Path to the subdomain word list file. If not provided, a default list with 5000 of the most used subdomains will be used.")
     parser.add_argument("-hc", "--health-check-domain", metavar="github.com", default="github.com", type=str, help="Domain for the DNS servers health check. The DNS server is considered valid if it can resolve the domain. Default is 'github.com'.")
