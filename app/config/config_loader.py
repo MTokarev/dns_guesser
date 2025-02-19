@@ -71,7 +71,7 @@ def load_config(cancellation_event: threading.Event, parsed_args: argparse.Names
         logging.debug(f"Debug mode is enabled. Configuration: {config}")
 
     if config.subdomain_word_list_file_path is None or config.subdomain_word_list_file_path == "":
-        logger.info(f"'subdomain_word_list_file_path' is not set in the configuration '{config_filename}' or provided via argument. Using default list with the most 5000 used domains.")
+        logger.info(f"Using default list with the most 5000 used subdomains. Use '-sw' parameter to set the path to the custom subdomain word list file.")
         subdomains: set[str] = THE_MOST_USED_DOMAINS
     else:
         try:
@@ -100,7 +100,7 @@ def get_valid_subdomains(subdomains: set[str]) -> set[str]:
             logging.warning(f"Invalid subdomain: {subdomain}")
           
     number_of_subdomains = len(valid_subdomains) + 1
-    logger.info(f"Read '{number_of_subdomains}' valid subdomain{'s' if number_of_subdomains > 1 else ''}.")
+    logger.info(f"Read '{number_of_subdomains}' valid subdomain{'s' if number_of_subdomains > 1 else ''} 🧐.")
     return valid_subdomains
 
 def get_validated_dns_servers(health_check_domain: str, dns_servers: List[str], cancellation_event: threading.Event) -> List[str]:
@@ -108,13 +108,13 @@ def get_validated_dns_servers(health_check_domain: str, dns_servers: List[str], 
         try:
             ipaddress.ip_address(server)
         except ValueError:
-            logger.warning(f"Invalid IP address for DNS server: {server}")
+            logger.warning(f"Invalid IP address for DNS server: '{server}'")
             dns_servers.remove(server)
             continue
     
     if len(dns_servers) == 0:
-        logger.error("No valid DNS servers found.")
-        raise ValueError("No valid DNS servers found.")
+        logger.error("No valid DNS servers found 🐞.")
+        sys.exit(1)
     
     for server in dns_servers:
         try:
@@ -134,6 +134,7 @@ def get_validated_dns_servers(health_check_domain: str, dns_servers: List[str], 
             continue
         
     if len(dns_servers) == 0:
-        raise ValueError("No reachable DNS servers found.")
+        logger.error("No reachable DNS servers found 🐞.")
+        sys.exit(1)
     
     return dns_servers

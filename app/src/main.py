@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 def main():
     start_time = time.perf_counter()
 
-    logger.info("Press Ctrl+C to cancel the execution.")
+    logger.info("Press Ctrl+C 💥 to cancel the execution .")
     
     # Register signal handlers for graceful shutdown (Ctrl+C or termination)
     signal.signal(signal.SIGINT, signal_handler)
@@ -57,7 +57,7 @@ def main():
     end_time = time.perf_counter()
     elapsed_time = end_time - start_time
 
-    logger.info(f"Elapsed time: {elapsed_time:.2f} seconds")
+    logger.info(f"Elapsed time: {elapsed_time:.2f} seconds ⏱️.")
 
 
 def resolve_domain(server: str, domain: str, record_type: dns.rdatatype = dns.rdatatype.A, nested_calls: int = 3, current_call: int = 1) -> tuple[str, str, Optional[List[str]]]:
@@ -126,7 +126,7 @@ def resolve_in_parallel(config: AppConfig) -> DefaultDict[str, set[str]]:
                 resolved[domain].update(ip_addresses)
                 logger.info(f"DNS server '{server}' resolved '{domain}' to '{', '.join(ip_addresses)}'.")
 
-    logger.info("All records have been resolved.")
+    logger.info("All records have been resolved ✅.")
 
     return resolved  
 
@@ -170,13 +170,13 @@ def write_results_to_file(resolved: DefaultDict[str, set[str]], file_path: str, 
                     f.write(f"{ip} # {', '.join(sorted_by_duplicates[ip])}\n")
 
     except IOError as e:
-        logger.error(f"Error writing to file {file_path}: {e}")
+        logger.error(f"Error writing to file '{file_path}': {e}")
         return
-    logger.info(f"Results written to {file_path}")
+    logger.info(f"Results written to '{file_path}' 📝.")
 
 def parse_args() -> argparse.Namespace:
     """Parses command-line arguments."""
-    parser = argparse.ArgumentParser(description="Subdomain Resolver")
+    parser = argparse.ArgumentParser(description="Subdomain Resolver 🔎")
 
     # Adding required command-line arguments
     # Adding mutually exclusive group

@@ -8,7 +8,7 @@ def read_long_description():
 
 setup(
     name='dns-guesser',
-    version='0.1.5',
+    version='0.1.6',
     packages=find_packages(),
     install_requires=[
         'dnspython==2.7.0'
